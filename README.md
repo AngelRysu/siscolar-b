@@ -113,6 +113,5 @@ Para entornos productivos, el servidor soporta HTTPS nativo mediante variables d
 │   ├── middlewares/    # Manejo de errores y validaciones
 │   ├── index.ts        # Punto de entrada
 │   └── ...
-├── .env.example        # Plantilla de variables de entorno
 ├── .gitignore          # Archivos ignorados por Git
 └── package.json        # Dependencias y scripts
