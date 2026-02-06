@@ -1,0 +1,27 @@
+### Variables Reutilizables
+@baseUrl = http://localhost:3000/api/v1
+@contentType = application/json
+
+# -------------------------------------------------------
+# MÓDULO: GENERAL
+# -------------------------------------------------------
+
+### 1. Verificar estado de la API (Root V1)
+GET {{baseUrl}}/
+Content-Type: {{contentType}}
+
+### 2. Prueba de Error Controlado (400 Bad Request)
+# Esto sirve para validar que el middleware de errores responde en JSON estándar
+GET {{baseUrl}}/error-prueba
+Content-Type: {{contentType}}
+
+### 3. Prueba de Ruta No Encontrada (404)
+GET {{baseUrl}}/ruta-que-no-existe
+Content-Type: {{contentType}}
+
+# -------------------------------------------------------
+# DOCUMENTACIÓN
+# -------------------------------------------------------
+
+### 4. Obtener Contrato OpenAPI en JSON
+GET http://localhost:3000/docs/json

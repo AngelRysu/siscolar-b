@@ -1,0 +1,674 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["archivo", "captacion", "general", "ingresos", "oferta"]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model acceso {
+  id          Int     @id(map: "pk_acceso") @default(autoincrement())
+  clave       String  @unique(map: "uq_acceso_clave") @db.VarChar(50)
+  nombre      String  @db.VarChar(150)
+  descripcion String? @db.VarChar(500)
+  estado      String  @default("Activo") @db.VarChar(10)
+  tipo        tipo[]
+
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model archivo {
+  id                Int         @id(map: "pk_archivo") @default(autoincrement())
+  revision_id       Int
+  storage_proveedor String      @db.VarChar(60)
+  storage_id        String      @db.VarChar(150)
+  storage_ruta      String?     @db.VarChar(500)
+  nombre_archivo    String      @db.VarChar(255)
+  mime_type         String      @db.VarChar(120)
+  tamano_bytes      BigInt
+  checksum          String?     @db.VarChar(128)
+  fecha_carga       DateTime    @default(now()) @db.Timestamp(6)
+  estado            String      @default("Activo") @db.VarChar(10)
+  revision          revision    @relation(fields: [revision_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_archivo_revision")
+  auditoria         auditoria[]
+
+  @@index([checksum], map: "ix_archivo_checksum")
+  @@index([revision_id], map: "ix_archivo_revision_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model auditoria {
+  id                 Int          @id(map: "pk_auditoria") @default(autoincrement())
+  fecha_evento       DateTime     @default(now()) @db.Timestamp(6)
+  tipo_evento        String       @default("Creacion") @db.VarChar(30)
+  descripcion        String?      @db.VarChar(500)
+  resultado          String       @default("Exitoso") @db.VarChar(10)
+  motivo             String?      @db.VarChar(500)
+  origen_sistema     String?      @db.VarChar(80)
+  referencia_externa String?      @db.VarChar(120)
+  entidad_id         Int
+  documento_id       Int?
+  revision_id        Int?
+  expediente_id      Int?
+  archivo_id         Int?
+  repositorio_id     Int?
+  ubicacion_id       Int?
+  archivo            archivo?     @relation(fields: [archivo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_archivo")
+  documento          documento?   @relation(fields: [documento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_documento")
+  entidad            entidad      @relation(fields: [entidad_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_entidad")
+  expediente         expediente?  @relation(fields: [expediente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_expediente")
+  repositorio        repositorio? @relation(fields: [repositorio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_repositorio")
+  revision           revision?    @relation(fields: [revision_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_revision")
+  ubicacion          ubicacion?   @relation(fields: [ubicacion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_auditoria_ubicacion")
+
+  @@index([archivo_id], map: "ix_auditoria_archivo_id")
+  @@index([documento_id], map: "ix_auditoria_documento_id")
+  @@index([entidad_id], map: "ix_auditoria_entidad_id")
+  @@index([expediente_id], map: "ix_auditoria_expediente_id")
+  @@index([fecha_evento], map: "ix_auditoria_fecha_evento")
+  @@index([revision_id], map: "ix_auditoria_revision_id")
+  @@index([tipo_evento], map: "ix_auditoria_tipo_evento")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model disposicion {
+  id                 Int      @id(map: "pk_disposicion") @default(autoincrement())
+  serie_id           Int
+  subserie_id        Int
+  anos_tramite       Int
+  anos_concentracion Int
+  destino_final      String   @db.VarChar(60)
+  observaciones      String?  @db.VarChar(500)
+  estado             String   @default("Activo") @db.VarChar(10)
+  serie              serie    @relation(fields: [serie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disposicion_serie")
+  subserie           subserie @relation(fields: [subserie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disposicion_subserie")
+
+  @@index([serie_id], map: "ix_disposicion_serie_id")
+  @@index([subserie_id], map: "ix_disposicion_subserie_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model documento {
+  id                                        Int            @id(map: "pk_documento") @default(autoincrement())
+  tipo_id                                   Int
+  titulo                                    String         @db.VarChar(250)
+  descripcion                               String?        @db.VarChar(500)
+  estado_id                                 Int
+  medio_id                                  Int
+  origen                                    String         @default("Sistema") @db.VarChar(20)
+  fecha_documento                           DateTime?      @default(now()) @db.Timestamp(6)
+  fecha_registro                            DateTime       @default(now()) @db.Timestamp(6)
+  propietario_id                            Int
+  creador_id                                Int
+  auditoria                                 auditoria[]
+  entidad_documento_creador_idToentidad     entidad        @relation("documento_creador_idToentidad", fields: [creador_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_creador")
+  estado                                    archivo_estado @relation(fields: [estado_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_estado")
+  medio                                     medio          @relation(fields: [medio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_medio")
+  entidad_documento_propietario_idToentidad entidad        @relation("documento_propietario_idToentidad", fields: [propietario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_propietario")
+  tipo                                      tipo           @relation(fields: [tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_tipo")
+  prestamo                                  prestamo[]
+  relacion                                  relacion[]
+  revision                                  revision[]
+
+  @@index([creador_id], map: "ix_documento_creador_id")
+  @@index([estado_id], map: "ix_documento_estado_id")
+  @@index([fecha_registro], map: "ix_documento_fecha_registro")
+  @@index([medio_id], map: "ix_documento_medio_id")
+  @@index([propietario_id], map: "ix_documento_propietario_id")
+  @@index([tipo_id], map: "ix_documento_tipo_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model entidad {
+  id                                              Int          @id(map: "pk_entidad") @default(autoincrement())
+  tipo                                            String       @default("Aspirante") @db.VarChar(20)
+  entidad_id                                      Int
+  rol                                             String       @default("Creador") @db.VarChar(60)
+  estado                                          String       @default("Activo") @db.VarChar(10)
+  auditoria                                       auditoria[]
+  documento_documento_creador_idToentidad         documento[]  @relation("documento_creador_idToentidad")
+  documento_documento_propietario_idToentidad     documento[]  @relation("documento_propietario_idToentidad")
+  expediente                                      expediente[]
+  prestamo_prestamo_autoriza_idToentidad          prestamo[]   @relation("prestamo_autoriza_idToentidad")
+  prestamo_prestamo_entrega_idToentidad           prestamo[]   @relation("prestamo_entrega_idToentidad")
+  prestamo_prestamo_recibe_devolucion_idToentidad prestamo[]   @relation("prestamo_recibe_devolucion_idToentidad")
+  prestamo_prestamo_solicitante_idToentidad       prestamo[]   @relation("prestamo_solicitante_idToentidad")
+  revision                                        revision[]
+
+  @@index([tipo, entidad_id], map: "ix_entidad_tipo_entidad_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model archivo_estado {
+  id          Int         @id(map: "pk_estado") @default(autoincrement())
+  clave       String      @unique(map: "uq_estado_clave") @db.VarChar(50)
+  nombre      String      @db.VarChar(30)
+  descripcion String?     @db.VarChar(500)
+  orden       Int         @unique(map: "uq_estado_orden")
+  estado      String      @default("Activo") @db.VarChar(10)
+  documento   documento[]
+
+  @@map("estado")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model expediente {
+  id             Int         @id(map: "pk_expediente") @default(autoincrement())
+  clave          String      @unique(map: "uq_expediente_clave") @db.VarChar(60)
+  nombre         String      @db.VarChar(200)
+  descripcion    String?     @db.VarChar(500)
+  estado         String      @default("Activo") @db.VarChar(10)
+  fecha_apertura DateTime    @default(now()) @db.Timestamp(6)
+  fecha_cierre   DateTime?   @db.Timestamp(6)
+  responsable_id Int
+  carpeta_id     String?     @db.VarChar(120)
+  auditoria      auditoria[]
+  entidad        entidad     @relation(fields: [responsable_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_expediente_responsable")
+  prestamo       prestamo[]
+  relacion       relacion[]
+
+  @@index([fecha_apertura, fecha_cierre], map: "ix_expediente_fechas")
+  @@index([responsable_id], map: "ix_expediente_responsable_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model medio {
+  id          Int         @id(map: "pk_medio") @default(autoincrement())
+  clave       String      @unique(map: "uq_medio_clave") @db.VarChar(50)
+  nombre      String      @db.VarChar(150)
+  descripcion String?     @db.VarChar(500)
+  estado      String      @default("Activo") @db.VarChar(10)
+  documento   documento[]
+  requisito   requisito[]
+
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model prestamo {
+  id                                             Int         @id(map: "pk_prestamo") @default(autoincrement())
+  fecha_prestamo                                 DateTime    @db.Timestamp(6)
+  fecha_compromiso_devolucion                    DateTime    @db.Timestamp(6)
+  fecha_devolucion                               DateTime?   @db.Timestamp(6)
+  estado                                         String      @default("Activo") @db.VarChar(10)
+  observaciones                                  String?     @db.VarChar(500)
+  solicitante_id                                 Int
+  autoriza_id                                    Int
+  entrega_id                                     Int
+  recibe_devolucion_id                           Int?
+  expediente_id                                  Int?
+  documento_id                                   Int?
+  entidad_prestamo_autoriza_idToentidad          entidad     @relation("prestamo_autoriza_idToentidad", fields: [autoriza_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prestamo_autoriza")
+  documento                                      documento?  @relation(fields: [documento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prestamo_documento")
+  entidad_prestamo_entrega_idToentidad           entidad     @relation("prestamo_entrega_idToentidad", fields: [entrega_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prestamo_entrega")
+  expediente                                     expediente? @relation(fields: [expediente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prestamo_expediente")
+  entidad_prestamo_recibe_devolucion_idToentidad entidad?    @relation("prestamo_recibe_devolucion_idToentidad", fields: [recibe_devolucion_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prestamo_recibe_devolucion")
+  entidad_prestamo_solicitante_idToentidad       entidad     @relation("prestamo_solicitante_idToentidad", fields: [solicitante_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prestamo_solicitante")
+
+  @@index([autoriza_id], map: "ix_prestamo_autoriza_id")
+  @@index([documento_id], map: "ix_prestamo_documento_id")
+  @@index([entrega_id], map: "ix_prestamo_entrega_id")
+  @@index([estado], map: "ix_prestamo_estado")
+  @@index([expediente_id], map: "ix_prestamo_expediente_id")
+  @@index([fecha_prestamo, fecha_compromiso_devolucion, fecha_devolucion], map: "ix_prestamo_fechas")
+  @@index([recibe_devolucion_id], map: "ix_prestamo_recibe_devolucion_id")
+  @@index([solicitante_id], map: "ix_prestamo_solicitante_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model relacion {
+  id            Int        @id(map: "pk_relacion") @default(autoincrement())
+  documento_id  Int
+  expediente_id Int
+  principal     Boolean
+  fecha_vinculo DateTime   @default(now()) @db.Timestamp(6)
+  estado        String     @default("Activo") @db.VarChar(10)
+  documento     documento  @relation(fields: [documento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_relacion_documento")
+  expediente    expediente @relation(fields: [expediente_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_relacion_expediente")
+
+  @@index([documento_id], map: "ix_relacion_documento_id")
+  @@index([expediente_id], map: "ix_relacion_expediente_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model repositorio {
+  id         Int         @id(map: "pk_repositorio") @default(autoincrement())
+  plantel_id Int?
+  proveedor  String      @db.VarChar(60)
+  drive_id   String      @db.VarChar(120)
+  carpeta_id String      @db.VarChar(120)
+  nombre     String      @db.VarChar(200)
+  estado     String      @default("Activo") @db.VarChar(10)
+  auditoria  auditoria[]
+  ubicacion  ubicacion[]
+
+  @@unique([plantel_id, drive_id, carpeta_id], map: "uq_repositorio_plantel_drive_carpeta")
+  @@index([plantel_id], map: "ix_repositorio_plantel_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model requisito {
+  id          Int      @id(map: "pk_requisito") @default(autoincrement())
+  subserie_id Int
+  tipo_id     Int
+  medio_id    Int
+  obligatorio Boolean
+  condicion   String?  @db.VarChar(500)
+  orden       Int
+  estado      String   @default("Activo") @db.VarChar(10)
+  medio       medio    @relation(fields: [medio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_requisito_medio")
+  subserie    subserie @relation(fields: [subserie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_requisito_subserie")
+  tipo        tipo     @relation(fields: [tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_requisito_tipo")
+
+  @@unique([subserie_id, tipo_id, medio_id], map: "uq_requisito_subserie_tipo_medio")
+  @@index([medio_id], map: "ix_requisito_medio_id")
+  @@index([subserie_id], map: "ix_requisito_subserie_id")
+  @@index([tipo_id], map: "ix_requisito_tipo_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model revision {
+  id             Int         @id(map: "pk_revision") @default(autoincrement())
+  documento_id   Int
+  numero_version Int
+  comentario     String?     @db.VarChar(500)
+  fecha_version  DateTime    @default(now()) @db.Timestamp(6)
+  creador_id     Int
+  estado         String      @default("Activo") @db.VarChar(10)
+  archivo        archivo[]
+  auditoria      auditoria[]
+  entidad        entidad     @relation(fields: [creador_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_revision_creador")
+  documento      documento   @relation(fields: [documento_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_revision_documento")
+
+  @@unique([documento_id, numero_version], map: "uq_revision_documento_version")
+  @@index([creador_id], map: "ix_revision_creador_id")
+  @@index([documento_id], map: "ix_revision_documento_id")
+  @@index([documento_id, estado, numero_version(sort: Desc)], map: "ix_revision_vigente_lookup")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model serie {
+  id          Int           @id(map: "pk_serie") @default(autoincrement())
+  clave       String        @unique(map: "uq_serie_clave") @db.VarChar(50)
+  nombre      String        @db.VarChar(200)
+  descripcion String?       @db.VarChar(500)
+  estado      String        @default("Activo") @db.VarChar(10)
+  disposicion disposicion[]
+  subserie    subserie[]
+
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model subserie {
+  id          Int           @id(map: "pk_subserie") @default(autoincrement())
+  serie_id    Int
+  clave       String        @db.VarChar(50)
+  nombre      String        @db.VarChar(200)
+  descripcion String?       @db.VarChar(500)
+  estado      String        @default("Activo") @db.VarChar(10)
+  disposicion disposicion[]
+  requisito   requisito[]
+  serie       serie         @relation(fields: [serie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_subserie_serie")
+  ubicacion   ubicacion[]
+
+  @@unique([serie_id, clave], map: "uq_subserie_serie_clave")
+  @@index([serie_id], map: "ix_subserie_serie_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tipo {
+  id          Int         @id(map: "pk_tipo") @default(autoincrement())
+  clave       String      @unique(map: "uq_tipo_clave") @db.VarChar(50)
+  nombre      String      @db.VarChar(150)
+  descripcion String?     @db.VarChar(500)
+  valor_id    Int
+  acceso_id   Int
+  clase       String?     @db.VarChar(100)
+  estado      String      @default("Activo") @db.VarChar(10)
+  mime_type   String      @db.VarChar(120)
+  documento   documento[]
+  requisito   requisito[]
+  acceso      acceso      @relation(fields: [acceso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_acceso")
+  valor       valor       @relation(fields: [valor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_valor")
+
+  @@index([acceso_id], map: "ix_tipo_acceso_id")
+  @@index([valor_id], map: "ix_tipo_valor_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ubicacion {
+  id             Int         @id(map: "pk_ubicacion") @default(autoincrement())
+  repositorio_id Int
+  subserie_id    Int
+  carpeta_id     String      @db.VarChar(120)
+  estado         String      @default("Activo") @db.VarChar(10)
+  auditoria      auditoria[]
+  repositorio    repositorio @relation(fields: [repositorio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ubicacion_repositorio")
+  subserie       subserie    @relation(fields: [subserie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ubicacion_subserie")
+
+  @@index([repositorio_id], map: "ix_ubicacion_repositorio_id")
+  @@index([subserie_id], map: "ix_ubicacion_subserie_id")
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model valor {
+  id          Int     @id(map: "pk_valor") @default(autoincrement())
+  clave       String  @unique(map: "uq_valor_clave") @db.VarChar(50)
+  nombre      String  @db.VarChar(150)
+  descripcion String? @db.VarChar(500)
+  tipo        String  @db.VarChar(20)
+  estado      String  @default("Activo") @db.VarChar(10)
+  tipo_rel    tipo[]
+
+  @@schema("archivo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model convocatorias {
+  id_convocatoria         Int                       @id(map: "pk_convocatoria") @default(autoincrement())
+  id_proceso              Int
+  id_periodo              Int
+  clave                   String                    @db.VarChar(20)
+  nombre                  String                    @db.VarChar(100)
+  estado                  String                    @db.VarChar(8)
+  periodo                 periodo                   @relation(fields: [id_periodo], references: [id_periodo], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatoria_periodo")
+  proceso                 proceso                   @relation(fields: [id_proceso], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatoria_proceso")
+  convocatorias_conceptos convocatorias_conceptos[]
+  convocatorias_fechas    convocatorias_fechas[]
+
+  @@schema("captacion")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model convocatorias_conceptos {
+  id_convocatoria_concepto Int           @id(map: "pk_convocatoria_conceptos") @default(autoincrement())
+  id_convocatoria          Int
+  id_concepto              Int
+  estado                   String        @db.VarChar(8)
+  conceptos                conceptos     @relation(fields: [id_concepto], references: [id_concepto], onDelete: NoAction, onUpdate: NoAction, map: "fk_pagos_concepto")
+  convocatorias            convocatorias @relation(fields: [id_convocatoria], references: [id_convocatoria], onDelete: NoAction, onUpdate: NoAction, map: "fk_pagos_convocatoria")
+
+  @@schema("captacion")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model convocatorias_fechas {
+  id_convocatoria_fecha Int           @id(map: "pk_convocatoria_fecha") @default(autoincrement())
+  id_convocatoria       Int
+  id_evento             Int
+  fecha                 DateTime      @db.Date
+  estado                String        @db.VarChar(8)
+  convocatorias         convocatorias @relation(fields: [id_convocatoria], references: [id_convocatoria], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatoria_fecha_convocatoria")
+  evento                evento        @relation(fields: [id_evento], references: [id_evento], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatoria_fecha_evento")
+
+  @@schema("captacion")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model convocatorias_oferta {
+  id_oferta    Int         @id(map: "pk_convocatorias_oferta") @default(autoincrement())
+  id_unidad    Int
+  id_carrera   Int
+  id_modalidad Int
+  id_turno     Int
+  capacidad    Int?
+  estado       String      @db.VarChar(8)
+  carreras     carreras    @relation(fields: [id_carrera], references: [id_carrera], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatorias_oferta_carrera")
+  modalidades  modalidades @relation(fields: [id_modalidad], references: [id_modalidad], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatorias_oferta_modalidad")
+  turnos       turnos      @relation(fields: [id_turno], references: [id_turno], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatorias_oferta_turno")
+  unidades     unidades    @relation(fields: [id_unidad], references: [id_unidad], onDelete: NoAction, onUpdate: NoAction, map: "fk_convocatorias_oferta_unidad")
+
+  @@schema("captacion")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model banco {
+  id_banco Int       @id(map: "pk_bancos") @default(autoincrement())
+  nombre   String    @db.VarChar(20)
+  estado   String    @db.VarChar(8)
+  cuentas  cuentas[]
+
+  @@schema("general")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model escuela {
+  id_escuela   Int       @id(map: "pk_escuelas") @default(autoincrement())
+  id_municipio Int
+  clave        String?   @db.VarChar(25)
+  nombre       String?   @db.VarChar(300)
+  tipo         String?   @db.VarChar(24)
+  sector       String?   @db.VarChar(7)
+  estatus      String?   @db.VarChar(8)
+  municipio    municipio @relation(fields: [id_municipio], references: [id_municipio], map: "fk_escuelas_municipio")
+
+  @@schema("general")
+}
+
+model general_estado {
+  id_estado String      @id(map: "estados_pk") @db.Char(2)
+  clave     String      @db.Char(2)
+  nombre    String      @db.VarChar(26)
+  municipio municipio[]
+
+  @@map("estado")
+  @@schema("general")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model evento {
+  id_evento            Int                    @id(map: "pk_evento") @default(autoincrement())
+  clave                String                 @unique(map: "eventos_unique") @db.Char(20)
+  nombre               String                 @db.VarChar(100)
+  estado               String                 @db.VarChar(8)
+  convocatorias_fechas convocatorias_fechas[]
+
+  @@schema("general")
+}
+
+model municipio {
+  id_municipio Int            @id(map: "pk_municipios") @default(autoincrement())
+  id_estado    String         @db.Char(2)
+  nombre       String         @db.VarChar(50)
+  escuela      escuela[]
+  estado       general_estado @relation(fields: [id_estado], references: [id_estado], map: "fk_municipios_estado")
+
+  @@schema("general")
+}
+
+model parametro {
+  id_parametro Int      @id(map: "pk_parametro") @default(autoincrement())
+  id_servicio  Int
+  clave        String   @unique(map: "parametros_clave_key") @db.Char(6)
+  nombre       String   @db.VarChar(50)
+  valor        String   @unique(map: "parametros_valor_key") @db.VarChar(5)
+  servicio     servicio @relation(fields: [id_servicio], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_parametro_servicio")
+
+  @@schema("general")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model periodo {
+  id_periodo      Int             @id(map: "pk_periodo") @default(autoincrement())
+  clave           String          @unique(map: "periodos_clave_key") @db.Char(5)
+  nombre_corto    String          @unique(map: "periodos_nombre_corto_key") @db.VarChar(50)
+  nombre_completo String          @unique(map: "periodos_nombre_completo_key") @db.VarChar(100)
+  estado          String          @db.VarChar(8)
+  convocatorias   convocatorias[]
+
+  @@schema("general")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model proceso {
+  id            Int             @id(map: "pk_proceso") @default(autoincrement())
+  clave         String          @unique(map: "procesos_clave_key") @db.VarChar(15)
+  nombre        String          @unique(map: "procesos_nombre_key") @db.VarChar(100)
+  estado        String          @db.VarChar(8)
+  serie         String          @db.VarChar(30)
+  convocatorias convocatorias[]
+
+  @@index([serie], map: "idx_proceso_serie")
+  @@schema("general")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model servicio {
+  id         Int         @id(map: "pk_servicio") @default(autoincrement())
+  proceso_id Int
+  clave      String      @db.Char(12)
+  nombre     String      @db.VarChar(100)
+  estado     String      @db.VarChar(8)
+  subserie   String      @db.VarChar(30)
+  parametro  parametro[]
+
+  @@index([proceso_id, subserie], map: "idx_servicio_proceso_subserie")
+  @@index([subserie], map: "idx_servicio_subserie")
+  @@schema("general")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model conceptos {
+  id_concepto             Int                       @id(map: "pk_concepto") @default(autoincrement())
+  clave                   String                    @db.Char(2)
+  nombre                  String                    @db.VarChar(100)
+  monto                   Decimal                   @default(0.0) @db.Decimal(7, 2)
+  estado                  String                    @default("Activo") @db.VarChar(8)
+  iva                     String                    @default("No") @db.VarChar(2)
+  convocatorias_conceptos convocatorias_conceptos[]
+  descuentos              descuentos[]
+  ordenes                 ordenes[]
+
+  @@unique([clave, estado], map: "conceptos_unique")
+  @@schema("ingresos")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model cuentas {
+  id_cuenta Int      @id(map: "pk_cuentas") @default(autoincrement())
+  id_banco  Int
+  id_unidad Int
+  convenio  String   @db.Char(6)
+  clabe     String   @db.Char(18)
+  estado    String   @db.VarChar(8)
+  banco     banco    @relation(fields: [id_banco], references: [id_banco], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuentas_banco")
+  unidades  unidades @relation(fields: [id_unidad], references: [id_unidad], onDelete: NoAction, onUpdate: NoAction, map: "fk_cuentas_unidades")
+
+  @@schema("ingresos")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model descuentos {
+  id_descuento      Int       @id(map: "pk_descuentos") @default(autoincrement())
+  id_tercero        Int
+  id_concepto       Int
+  monto_original    Decimal   @default(0.0) @db.Decimal(7, 2)
+  monto_ajustado    Decimal   @default(0.0) @db.Decimal(7, 2)
+  fecha_emision     DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  fecha_vencimiento DateTime  @db.Date
+  motivo            String    @db.VarChar(500)
+  tipo              String    @default("Condonación") @db.VarChar(11)
+  estado            String    @default("Activo") @db.VarChar(8)
+  conceptos         conceptos @relation(fields: [id_concepto], references: [id_concepto], onDelete: NoAction, onUpdate: NoAction, map: "fk_descuentos_concepto")
+  terceros          terceros  @relation(fields: [id_tercero], references: [id_tercero], onDelete: NoAction, onUpdate: NoAction, map: "fk_descuentos_tercero")
+
+  @@schema("ingresos")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ordenes {
+  id_orden          Int       @default(autoincrement())
+  id_concepto       Int
+  id_tercero        Int       @id(map: "pk_ordenes")
+  clave             String    @db.Char(30)
+  fecha_emision     DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  fecha_vencimiento DateTime  @db.Date
+  estado            String    @default("Activo") @db.VarChar(8)
+  conceptos         conceptos @relation(fields: [id_concepto], references: [id_concepto], onDelete: NoAction, onUpdate: NoAction, map: "fk_ordenes_concepto")
+  terceros          terceros  @relation(fields: [id_tercero], references: [id_tercero], onDelete: NoAction, onUpdate: NoAction, map: "fk_ordenes_tercero")
+
+  @@schema("ingresos")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model terceros {
+  id_tercero    Int          @id(map: "pk_terceros") @default(autoincrement())
+  id_referencia Int
+  razon_social  String       @db.VarChar(200)
+  rfc           String       @db.Char(13)
+  curp          String       @db.Char(18)
+  tipo          String       @default("Alumno") @db.VarChar(8)
+  estado        String       @default("Activo") @db.VarChar(8)
+  descuentos    descuentos[]
+  ordenes       ordenes?
+
+  @@unique([id_referencia, tipo], map: "uk_referencia_tipo")
+  @@schema("ingresos")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model carreras {
+  id_carrera           Int                    @id(map: "pk_carreras") @default(autoincrement())
+  clave                String                 @unique @db.VarChar(6)
+  nombre_corto         String                 @unique @db.VarChar(50)
+  nombre_completo      String                 @unique @db.VarChar(100)
+  rvoe                 String                 @unique @db.Char(6)
+  estado               String                 @db.VarChar(8)
+  convocatorias_oferta convocatorias_oferta[]
+
+  @@schema("oferta")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model modalidades {
+  id_modalidad         Int                    @id(map: "pk_modalidad") @default(autoincrement())
+  nombre               String                 @unique @db.VarChar(20)
+  estado               String                 @db.VarChar(8)
+  convocatorias_oferta convocatorias_oferta[]
+
+  @@schema("oferta")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model turnos {
+  id_turno             Int                    @id(map: "pk_turnos") @default(autoincrement())
+  nombre               String                 @unique @db.VarChar(20)
+  estado               String                 @db.VarChar(8)
+  convocatorias_oferta convocatorias_oferta[]
+
+  @@schema("oferta")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model unidades {
+  id_unidad            Int                    @id(map: "pk_unidades") @default(autoincrement())
+  clave                String                 @unique @db.Char(2)
+  cct                  String                 @unique @db.VarChar(15)
+  nombre_corto         String                 @unique @db.VarChar(50)
+  nombre_completo      String                 @unique @db.VarChar(100)
+  estado               String                 @db.VarChar(8)
+  convocatorias_oferta convocatorias_oferta[]
+  cuentas              cuentas[]
+
+  @@schema("oferta")
+}

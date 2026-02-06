@@ -1,0 +1,70 @@
+# ------------------------------------------------
+# Dependencias
+# ------------------------------------------------
+node_modules/
+
+# ------------------------------------------------
+# Build y Compilación
+# ------------------------------------------------
+dist/
+build/
+coverage/
+
+# ------------------------------------------------
+# Variables de Entorno
+# ------------------------------------------------
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+
+# ------------------------------------------------
+# Certificados SSL / Seguridad
+# ------------------------------------------------
+certs/
+security/
+*.pem
+*.crt
+*.key
+*.pfx
+
+# ------------------------------------------------
+# Prisma ORM
+# ------------------------------------------------
+/src/generated/prisma
+/prisma/*.db
+/prisma/*.db-journal
+
+# ------------------------------------------------
+# Logs del Sistema
+# ------------------------------------------------
+logs
+*.log
+npm-debug.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ------------------------------------------------
+# Sistema Operativo e IDEs
+# ------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# VS Code / JetBrains
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ------------------------------------------------
+# Archivos Temporales de Pruebas (Jest/Otros)
+# ------------------------------------------------
+.jest/
+test-results/

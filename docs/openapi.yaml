@@ -1,0 +1,67 @@
+openapi: 3.0.0
+info:
+  title: API Backend Institucional
+  description: API base para el sistema institucional (Módulo Archivo y Core).
+  version: 1.0.0
+  contact:
+    name: Equipo de Desarrollo
+
+servers:
+  - url: http://localhost:3050/api/v1
+    description: Servidor de Desarrollo
+
+tags:
+  - name: General
+    description: Endpoints de verificación y estado
+  - name: Archivo
+    description: Gestión documental (Próximamente)
+
+paths:
+  /:
+    get:
+      summary: Verificar estado de la API
+      tags:
+        - General
+      responses:
+        '200':
+          description: API operativa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: Error de servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+# ----------------------------------------------------------------
+# DEFINICIÓN DE ESQUEMAS REUTILIZABLES
+# ----------------------------------------------------------------
+components:
+  schemas:
+    # Esquema estándar de respuesta exitosa
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operación exitosa"
+        data:
+          type: object
+          nullable: true
+    
+    # Esquema estándar de error (Coincide con tu globalErrorHandler)
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        statusCode:
+          type: integer
+          example: 500
+        message:
+          type: string
+          example: "Ocurrió un error inesperado"
