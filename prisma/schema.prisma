@@ -9,18 +9,6 @@ datasource db {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model acceso {
-  id          Int     @id(map: "pk_acceso") @default(autoincrement())
-  clave       String  @unique(map: "uq_acceso_clave") @db.VarChar(50)
-  nombre      String  @db.VarChar(150)
-  descripcion String? @db.VarChar(500)
-  estado      String  @default("Activo") @db.VarChar(10)
-  tipo        tipo[]
-
-  @@schema("archivo")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model archivo {
   id                Int         @id(map: "pk_archivo") @default(autoincrement())
   revision_id       Int
@@ -96,31 +84,27 @@ model disposicion {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model documento {
-  id                                        Int            @id(map: "pk_documento") @default(autoincrement())
+  id                                        Int         @id(map: "pk_documento") @default(autoincrement())
   tipo_id                                   Int
-  titulo                                    String         @db.VarChar(250)
-  descripcion                               String?        @db.VarChar(500)
-  estado_id                                 Int
-  medio_id                                  Int
-  origen                                    String         @default("Sistema") @db.VarChar(20)
-  fecha_documento                           DateTime?      @default(now()) @db.Timestamp(6)
-  fecha_registro                            DateTime       @default(now()) @db.Timestamp(6)
+  titulo                                    String      @db.VarChar(250)
+  descripcion                               String?     @db.VarChar(500)
+  origen                                    String      @default("Sistema") @db.VarChar(20)
+  fecha_documento                           DateTime?   @default(now()) @db.Timestamp(6)
+  fecha_registro                            DateTime    @default(now()) @db.Timestamp(6)
   propietario_id                            Int
   creador_id                                Int
+  estado                                    String      @default("Subido") @db.VarChar(30)
+  medio                                     String      @db.VarChar(20)
   auditoria                                 auditoria[]
-  entidad_documento_creador_idToentidad     entidad        @relation("documento_creador_idToentidad", fields: [creador_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_creador")
-  estado                                    archivo_estado @relation(fields: [estado_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_estado")
-  medio                                     medio          @relation(fields: [medio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_medio")
-  entidad_documento_propietario_idToentidad entidad        @relation("documento_propietario_idToentidad", fields: [propietario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_propietario")
-  tipo                                      tipo           @relation(fields: [tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_tipo")
+  entidad_documento_creador_idToentidad     entidad     @relation("documento_creador_idToentidad", fields: [creador_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_creador")
+  entidad_documento_propietario_idToentidad entidad     @relation("documento_propietario_idToentidad", fields: [propietario_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_propietario")
+  tipo                                      tipo        @relation(fields: [tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documento_tipo")
   prestamo                                  prestamo[]
   relacion                                  relacion[]
   revision                                  revision[]
 
   @@index([creador_id], map: "ix_documento_creador_id")
-  @@index([estado_id], map: "ix_documento_estado_id")
   @@index([fecha_registro], map: "ix_documento_fecha_registro")
-  @@index([medio_id], map: "ix_documento_medio_id")
   @@index([propietario_id], map: "ix_documento_propietario_id")
   @@index([tipo_id], map: "ix_documento_tipo_id")
   @@schema("archivo")
@@ -148,20 +132,6 @@ model entidad {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model archivo_estado {
-  id          Int         @id(map: "pk_estado") @default(autoincrement())
-  clave       String      @unique(map: "uq_estado_clave") @db.VarChar(50)
-  nombre      String      @db.VarChar(30)
-  descripcion String?     @db.VarChar(500)
-  orden       Int         @unique(map: "uq_estado_orden")
-  estado      String      @default("Activo") @db.VarChar(10)
-  documento   documento[]
-
-  @@map("estado")
-  @@schema("archivo")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model expediente {
   id             Int         @id(map: "pk_expediente") @default(autoincrement())
   clave          String      @unique(map: "uq_expediente_clave") @db.VarChar(60)
@@ -179,19 +149,6 @@ model expediente {
 
   @@index([fecha_apertura, fecha_cierre], map: "ix_expediente_fechas")
   @@index([responsable_id], map: "ix_expediente_responsable_id")
-  @@schema("archivo")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model medio {
-  id          Int         @id(map: "pk_medio") @default(autoincrement())
-  clave       String      @unique(map: "uq_medio_clave") @db.VarChar(50)
-  nombre      String      @db.VarChar(150)
-  descripcion String?     @db.VarChar(500)
-  estado      String      @default("Activo") @db.VarChar(10)
-  documento   documento[]
-  requisito   requisito[]
-
   @@schema("archivo")
 }
 
@@ -246,7 +203,7 @@ model relacion {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model repositorio {
   id         Int         @id(map: "pk_repositorio") @default(autoincrement())
-  plantel_id Int?
+  unidad_id  Int?
   proveedor  String      @db.VarChar(60)
   drive_id   String      @db.VarChar(120)
   carpeta_id String      @db.VarChar(120)
@@ -255,13 +212,8 @@ model repositorio {
   auditoria  auditoria[]
   ubicacion  ubicacion[]
 
-  // New fields for Google Drive credentials
-  gdrive_access_token  String?    @db.Text
-  gdrive_refresh_token String?    @db.Text
-  gdrive_token_expiry  DateTime?
-
-  @@unique([plantel_id, drive_id, carpeta_id], map: "uq_repositorio_plantel_drive_carpeta")
-  @@index([plantel_id], map: "ix_repositorio_plantel_id")
+  @@unique([unidad_id, drive_id, carpeta_id], map: "uq_repositorio_plantel_drive_carpeta")
+  @@index([unidad_id], map: "ix_repositorio_plantel_id")
   @@schema("archivo")
 }
 
@@ -270,17 +222,15 @@ model requisito {
   id          Int      @id(map: "pk_requisito") @default(autoincrement())
   subserie_id Int
   tipo_id     Int
-  medio_id    Int
   obligatorio Boolean
   condicion   String?  @db.VarChar(500)
   orden       Int
   estado      String   @default("Activo") @db.VarChar(10)
-  medio       medio    @relation(fields: [medio_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_requisito_medio")
+  medio       String   @db.VarChar(20)
   subserie    subserie @relation(fields: [subserie_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_requisito_subserie")
   tipo        tipo     @relation(fields: [tipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_requisito_tipo")
 
-  @@unique([subserie_id, tipo_id, medio_id], map: "uq_requisito_subserie_tipo_medio")
-  @@index([medio_id], map: "ix_requisito_medio_id")
+  @@unique([subserie_id, tipo_id, medio], map: "uq_requisito_subserie_tipo_medio")
   @@index([subserie_id], map: "ix_requisito_subserie_id")
   @@index([tipo_id], map: "ix_requisito_tipo_id")
   @@schema("archivo")
@@ -344,18 +294,14 @@ model tipo {
   clave       String      @unique(map: "uq_tipo_clave") @db.VarChar(50)
   nombre      String      @db.VarChar(150)
   descripcion String?     @db.VarChar(500)
-  valor_id    Int
-  acceso_id   Int
   clase       String?     @db.VarChar(100)
   estado      String      @default("Activo") @db.VarChar(10)
   mime_type   String      @db.VarChar(120)
+  acceso      String      @db.VarChar(20)
+  valor       String      @db.VarChar(20)
   documento   documento[]
   requisito   requisito[]
-  acceso      acceso      @relation(fields: [acceso_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_acceso")
-  valor       valor       @relation(fields: [valor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tipo_valor")
 
-  @@index([acceso_id], map: "ix_tipo_acceso_id")
-  @@index([valor_id], map: "ix_tipo_valor_id")
   @@schema("archivo")
 }
 
@@ -372,19 +318,6 @@ model ubicacion {
 
   @@index([repositorio_id], map: "ix_ubicacion_repositorio_id")
   @@index([subserie_id], map: "ix_ubicacion_subserie_id")
-  @@schema("archivo")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model valor {
-  id          Int     @id(map: "pk_valor") @default(autoincrement())
-  clave       String  @unique(map: "uq_valor_clave") @db.VarChar(50)
-  nombre      String  @db.VarChar(150)
-  descripcion String? @db.VarChar(500)
-  tipo        String  @db.VarChar(20)
-  estado      String  @default("Activo") @db.VarChar(10)
-  tipo_rel    tipo[]
-
   @@schema("archivo")
 }
 
@@ -470,13 +403,12 @@ model escuela {
   @@schema("general")
 }
 
-model general_estado {
+model estado {
   id_estado String      @id(map: "estados_pk") @db.Char(2)
   clave     String      @db.Char(2)
   nombre    String      @db.VarChar(26)
   municipio municipio[]
 
-  @@map("estado")
   @@schema("general")
 }
 
@@ -492,11 +424,11 @@ model evento {
 }
 
 model municipio {
-  id_municipio Int            @id(map: "pk_municipios") @default(autoincrement())
-  id_estado    String         @db.Char(2)
-  nombre       String         @db.VarChar(50)
+  id_municipio Int       @id(map: "pk_municipios") @default(autoincrement())
+  id_estado    String    @db.Char(2)
+  nombre       String    @db.VarChar(50)
   escuela      escuela[]
-  estado       general_estado @relation(fields: [id_estado], references: [id_estado], map: "fk_municipios_estado")
+  estado       estado    @relation(fields: [id_estado], references: [id_estado], map: "fk_municipios_estado")
 
   @@schema("general")
 }

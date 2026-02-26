@@ -1,159 +1,127 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: API Backend Institucional
-  description: API base para el sistema institucional (Módulo Archivo y Core).
+  title: Sisesco-B API
+  description: API técnica para la gestión escolar y validación de repositorios documentales.
   version: 1.0.0
-  contact:
-    name: Equipo de Desarrollo
-
 servers:
   - url: http://localhost:3050/api/v1
     description: Servidor de Desarrollo
-
-tags:
-  - name: General
-    description: Endpoints de verificación y estado
-  - name: Items
-    description: Endpoints de ejemplo para items
-  - name: Archivo
-    description: Gestión documental (Próximamente)
 
 paths:
   /:
     get:
       summary: Verificar estado de la API
+      description: Retorna un mensaje confirmando que la API v1 está funcionando y el entorno actual.
       tags:
         - General
       responses:
         '200':
-          description: API operativa
+          description: API funcionando correctamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-        '500':
-          description: Error de servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /test-error:
-    get:
-      summary: Probar la respuesta de error estandarizada
-      tags:
-        - General
-      responses:
-        '400':
-          description: Error simulado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
   /items:
     get:
-      summary: Obtener una lista paginada de items
+      summary: Listar ítems de ejemplo (Paginado)
+      description: Endpoint de ejemplo que demuestra la paginación estándar del proyecto.
       tags:
-        - Items
+        - Ejemplos
       parameters:
-        - in: query
-          name: page
+        - name: page
+          in: query
           schema:
             type: integer
             default: 1
-          description: Número de página
-        - in: query
-          name: pageSize
+        - name: pageSize
+          in: query
           schema:
             type: integer
             default: 10
-          description: Tamaño de la página
       responses:
         '200':
-          description: Lista de items paginada
+          description: Lista de ítems paginada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedItemsResponse'
-        '400':
-          description: Parámetros de consulta inválidos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error de servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/PaginatedResponse'
 
-# ----------------------------------------------------------------
-# DEFINICIÓN DE ESQUEMAS REUTILIZABLES
-# ----------------------------------------------------------------
+  /repositorios/{id}/validar-conexion:
+    post:
+      summary: Validar conexión técnica con Google Drive
+      description: Verifica que el sistema pueda autenticarse y tenga permisos sobre la carpeta raíz asociada al repositorio.
+      tags:
+        - Repositorios
+      parameters:
+        - name: id
+          in: path
+          description: ID del repositorio en la base de datos
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Conexión validada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidacionResponse'
+        '403':
+          description: Acceso denegado o configuración incorrecta
+        '404':
+          description: Repositorio no encontrado
+
 components:
   schemas:
-    # Esquema para un solo item
-    Item:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: "Item 1"
-
-    # Esquema estándar de respuesta exitosa
     SuccessResponse:
       type: object
       properties:
         data:
           type: object
-          nullable: true
         meta:
           type: object
-          nullable: true
-          default: {}
 
-    # Esquema para respuestas paginadas
-    PaginatedItemsResponse:
+    PaginatedResponse:
       type: object
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Item'
+            type: object
         meta:
           type: object
           properties:
             page:
               type: integer
-              example: 1
             pageSize:
               type: integer
-              example: 10
             total:
               type: integer
-              example: 50
             totalPages:
               type: integer
-              example: 5
     
-    # Esquema estándar de error
-    ErrorResponse:
+    ValidacionResponse:
       type: object
       properties:
-        error:
+        data:
           type: object
           properties:
-            code:
+            repositorioId:
+              type: integer
+            driveId:
               type: string
-              example: "INTERNAL_SERVER_ERROR"
-            message:
+            carpetaRaizId:
               type: string
-              example: "Ocurrió un error inesperado"
-            details:
+            acceso:
+              type: string
+              example: "Ok"
+            permisos:
               type: object
-              nullable: true
+              properties:
+                puedeListar:
+                  type: boolean
+                puedeCrearCarpetas:
+                  type: boolean
+        meta:
+          type: object

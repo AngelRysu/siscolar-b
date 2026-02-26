@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:3000/api/v1
+@repositorioId = 1
+@archivoId = 1
+@entidadId = 1
+
+### 1. Validar Conexión (Verifica si el Service Account tiene acceso)
+POST {{baseUrl}}/repositorios/{{repositorioId}}/validar-conexion
+
+### 2. Listar Contenido Actual en Drive
+GET {{baseUrl}}/repositorios/{{repositorioId}}/contenido
+
+### 3. Subir y Registrar Documento (Registro en DB + Drive)
+# Para probar este, es mejor usar cURL por el manejo de archivos:
+# curl -X POST http://localhost:3000/api/v1/repositorios/1/documentos \
+#  -F "archivo=@/ruta/a/tu/test.pdf" \
+#  -F "tipo_id=1" \
+#  -F "titulo=Mi Primer Documento" \
+#  -F "entidad_id=1"
+
+### 4. Descargar Archivo
+# Esto abrirá el stream desde Google Drive
+GET {{baseUrl}}/archivos/{{archivoId}}/descargar
+
+### 5. Eliminar Archivo (Lógica en DB + Papelera en Drive)
+DELETE {{baseUrl}}/archivos/{{archivoId}}?entidadId={{entidadId}}
