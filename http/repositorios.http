@@ -1,25 +1,41 @@
 @baseUrl = http://localhost:3000/api/v1
 @repositorioId = 1
-@archivoId = 1
-@entidadId = 1
+@claveUnidad = 01
 
-### 1. Validar Conexión (Verifica si el Service Account tiene acceso)
+### Listar todos los repositorios
+GET {{baseUrl}}/repositorios
+
+### Crear un nuevo repositorio
+POST {{baseUrl}}/repositorios
+Content-Type: application/json
+
+{
+    "unidad_id": 1,
+    "proveedor": "GoogleDrive",
+    "drive_id": "root",
+    "carpeta_id": "1A2B3C4D5E6F7G8H9I0J",
+    "nombre": "Repositorio Test Plantel 01"
+}
+
+### Obtener repositorio por clave de unidad académica
+GET {{baseUrl}}/repositorios/clave/{{claveUnidad}}
+
+### Actualizar datos de un repositorio
+PATCH {{baseUrl}}/repositorios/{{repositorioId}}
+Content-Type: application/json
+
+{
+    "nombre": "Nombre Actualizado del Repositorio",
+    "proveedor": "GoogleDriveV2"
+}
+
+### Cambiar estado del repositorio
+PATCH {{baseUrl}}/repositorios/{{repositorioId}}/estado
+Content-Type: application/json
+
+{
+    "estado": "Inactivo"
+}
+
+### Validar Conexión Técnica (Google Drive)
 POST {{baseUrl}}/repositorios/{{repositorioId}}/validar-conexion
-
-### 2. Listar Contenido Actual en Drive
-GET {{baseUrl}}/repositorios/{{repositorioId}}/contenido
-
-### 3. Subir y Registrar Documento (Registro en DB + Drive)
-# Para probar este, es mejor usar cURL por el manejo de archivos:
-# curl -X POST http://localhost:3000/api/v1/repositorios/1/documentos \
-#  -F "archivo=@/ruta/a/tu/test.pdf" \
-#  -F "tipo_id=1" \
-#  -F "titulo=Mi Primer Documento" \
-#  -F "entidad_id=1"
-
-### 4. Descargar Archivo
-# Esto abrirá el stream desde Google Drive
-GET {{baseUrl}}/archivos/{{archivoId}}/descargar
-
-### 5. Eliminar Archivo (Lógica en DB + Papelera en Drive)
-DELETE {{baseUrl}}/archivos/{{archivoId}}?entidadId={{entidadId}}
