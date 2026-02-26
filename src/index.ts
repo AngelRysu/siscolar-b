@@ -10,6 +10,7 @@ import { globalErrorHandler, AppError } from './middlewares/errorHandler';
 import fs from 'node:fs';
 import https from 'node:https';
 import { buildSuccessResponse, buildErrorResponse, buildPaginatedResponse } from './utils/responseBuilder';
+import ubicacionesRouter from './routes/ubicaciones'
 
 dotenv.config();
 
@@ -20,6 +21,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 // 1. Configuración de Prisma
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
+
+app.set('prisma', prisma);
 
 // 2. Configuración de Swagger
 const swaggerPath = path.join(__dirname, '../docs/openapi.yaml');
@@ -92,6 +95,7 @@ apiV1Router.get('/items', async (req: Request, res: Response) => {
 
 // Montar el router en /api/v1
 app.use('/api/v1', apiV1Router);
+app.use('/api/v1/ubicaciones', ubicacionesRouter);
 
 // 6. Manejo de Rutas No Encontradas (404)
 app.all('*path', (req: Request, res: Response, next) => {
