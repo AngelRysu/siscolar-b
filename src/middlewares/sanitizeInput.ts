@@ -7,8 +7,7 @@ const sanitizeString = (value: string): string => {
         .trim();
 };
 
-
-const sanitizeObject = (obj: unknown): unknown => {
+const sanitizeObject = (obj: any): any => {
     if (typeof obj === 'string') {
         return sanitizeString(obj);
     }
@@ -18,11 +17,13 @@ const sanitizeObject = (obj: unknown): unknown => {
     }
 
     if (obj !== null && typeof obj === 'object') {
-        const sanitized: Record<string, unknown> = {};
+        // Modificar las propiedades del objeto existente en lugar de reemplazarlo
         for (const key in obj) {
-            sanitized[key] = sanitizeObject((obj as Record<string, unknown>)[key]);
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                obj[key] = sanitizeObject(obj[key]);
+            }
         }
-        return sanitized;
+        return obj;
     }
 
     return obj;
@@ -34,15 +35,15 @@ export const sanitizeInputMiddleware = (
     next: NextFunction
 ): void => {
     if (req.body) {
-        req.body = sanitizeObject(req.body);
+        sanitizeObject(req.body);
     }
 
     if (req.query) {
-        req.query = sanitizeObject(req.query) as typeof req.query;
+        sanitizeObject(req.query);
     }
 
     if (req.params) {
-        req.params = sanitizeObject(req.params) as typeof req.params;
+        sanitizeObject(req.params);
     }
 
     next();
