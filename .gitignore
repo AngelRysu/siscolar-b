@@ -68,3 +68,6 @@ desktop.ini
 # ------------------------------------------------
 .jest/
 test-results/
+
+
+google-auth.json
