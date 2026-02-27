@@ -47,6 +47,152 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedResponse'
 
+  /repositorios:
+    get:
+      summary: Listar todos los repositorios registrados
+      description: Retorna una lista completa de todos los repositorios configurados en el sistema.
+      tags:
+        - Repositorios
+      responses:
+        '200':
+          description: Lista de repositorios obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+    post:
+      summary: Dar de alta un nuevo repositorio
+      description: Crea un registro de repositorio con los campos necesarios para la integración con almacenamiento.
+      tags:
+        - Repositorios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - proveedor
+                - drive_id
+                - carpeta_id
+                - nombre
+              properties:
+                unidad_id:
+                  type: integer
+                  description: ID de la unidad académica asociada
+                proveedor:
+                  type: string
+                  example: "GoogleDrive"
+                drive_id:
+                  type: string
+                  description: ID de la unidad compartida o raíz en Google Drive
+                carpeta_id:
+                  type: string
+                  description: ID de la carpeta específica dentro de Drive
+                nombre:
+                  type: string
+                  example: "Repositorio Principal Plantel 01"
+      responses:
+        '201':
+          description: Repositorio creado exitosamente
+        '400':
+          description: Error en los datos de entrada
+
+  /repositorios/clave/{clave}:
+    get:
+      summary: Obtener repositorios por clave de unidad académica
+      description: Busca y retorna la lista de repositorios asociados a una unidad académica mediante su clave funcional (ej. "01").
+      tags:
+        - Repositorios
+      parameters:
+        - name: clave
+          in: path
+          description: Clave de la unidad académica
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de repositorios encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Repositorio'
+        '404':
+          description: Unidad académica o repositorios no encontrados
+
+  /repositorios/{id}:
+    patch:
+      summary: Actualizar datos de un repositorio
+      description: Permite actualizar los campos configurables del repositorio. El ID y el Estado no se modifican por este endpoint.
+      tags:
+        - Repositorios
+      parameters:
+        - name: id
+          in: path
+          description: ID del repositorio
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                unidad_id:
+                  type: integer
+                proveedor:
+                  type: string
+                drive_id:
+                  type: string
+                carpeta_id:
+                  type: string
+                nombre:
+                  type: string
+      responses:
+        '200':
+          description: Registro actualizado exitosamente
+        '404':
+          description: Repositorio no encontrado
+
+  /repositorios/{id}/estado:
+    patch:
+      summary: Cambiar estado de un repositorio
+      description: Actualiza únicamente el estado del repositorio (ej. "Activo", "Inactivo").
+      tags:
+        - Repositorios
+      parameters:
+        - name: id
+          in: path
+          description: ID del repositorio
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - estado
+              properties:
+                estado:
+                  type: string
+                  example: "Inactivo"
+      responses:
+        '200':
+          description: Estado actualizado exitosamente
+        '404':
+          description: Repositorio no encontrado
+
   /repositorios/{id}/validar-conexion:
     post:
       summary: Validar conexión técnica con Google Drive
@@ -72,8 +218,84 @@ paths:
         '404':
           description: Repositorio no encontrado
 
+  /validacion-documental/validar:
+    post:
+      summary: Validar un documento PDF
+      description: Ejecuta el flujo de extracción y reglas de validación según el tipo documental.
+      tags:
+        - Validación Documental
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                archivo:
+                  type: string
+                  format: binary
+                claveDocumental:
+                  type: string
+                  example: "ACTA_NAC"
+      responses:
+        '200':
+          description: Resultado de la validación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
 components:
   schemas:
+    Repositorio:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        unidad_id:
+          type: integer
+          nullable: true
+          example: 10
+        proveedor:
+          type: string
+          example: "GoogleDrive"
+        drive_id:
+          type: string
+          example: "0ABcDeFGhIjkL12345"
+        carpeta_id:
+          type: string
+          example: "1A2B3C4D5E6F7G8H9I0J"
+        nombre:
+          type: string
+          example: "Repositorio Principal Plantel 01"
+        estado:
+          type: string
+          example: "Activo"
+
+    CrearRepositorioRequest:
+      type: object
+      required:
+        - proveedor
+        - drive_id
+        - carpeta_id
+        - nombre
+      properties:
+        unidad_id:
+          type: integer
+          example: 10
+        proveedor:
+          type: string
+          example: "GoogleDrive"
+        drive_id:
+          type: string
+          example: "root"
+        carpeta_id:
+          type: string
+          example: "1A2B3C4D5E6F7G8H9I0J"
+        nombre:
+          type: string
+          example: "Nuevo Repositorio"
+
     SuccessResponse:
       type: object
       properties:

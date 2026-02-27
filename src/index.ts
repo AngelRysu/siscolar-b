@@ -8,15 +8,15 @@ import prisma from './config/db';
 import { globalErrorHandler, AppError } from './middlewares/errorHandler';
 import fs from 'node:fs';
 import https from 'node:https';
-import { buildSuccessResponse, buildErrorResponse, buildPaginatedResponse } from './utils/responseBuilder';
 import { sanitizeInputMiddleware } from './middlewares/sanitizeInput';
 import repositorioRoutes from './routes/repositorio.routes';
 import generalRoutes from './routes/general.routes';
+import validacionDocumentalRoutes from './routes/validacionDocumental.routes';
 
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3050;
 const isProduction = process.env.NODE_ENV === 'production';
 
 // 1. Configuración de Swagger
@@ -51,6 +51,9 @@ apiV1Router.use('/', generalRoutes);
 
 // Rutas de Repositorios
 apiV1Router.use('/repositorios', repositorioRoutes);
+
+// Rutas de Validación Documental
+apiV1Router.use('/validacion-documental', validacionDocumentalRoutes);
 
 // Endpoint de prueba para errores (puedes borrarlo luego)
 apiV1Router.get('/test-error', (req: Request, res: Response, next) => {
