@@ -17,6 +17,8 @@ tags:
     description: Endpoints de ejemplo para items
   - name: Archivo
     description: Gestión documental (Próximamente)
+  - name: Ubicaciones
+    description: Endpoints de gestión de ubicaciones
 
 paths:
   /:
@@ -89,6 +91,149 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /ubicaciones:
+    get:
+      summary: Obtener todas las ubicaciones
+      tags:
+        - Ubicaciones
+      responses:
+        '200':
+          description: Lista de ubicaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ubicacion'
+        '500':
+          description: Error de servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Crear una nueva ubicación
+      tags:
+        - Ubicaciones
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UbicacionInput'
+      responses:
+        '201':
+          description: Ubicación creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ubicacion'
+        '500':
+          description: Error de servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /ubicaciones/clave/{id}:
+    get:
+      summary: Obtener una ubicación por su ID
+      tags:
+        - Ubicaciones
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la ubicación
+      responses:
+        '200':
+          description: Ubicación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ubicacion'
+        '404':
+          description: Ubicación no encontrada
+        '500':
+          description: Error de servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ubicaciones/{id}:
+    patch:
+      summary: Actualizar una ubicación existente
+      tags:
+        - Ubicaciones
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la ubicación a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UbicacionInput'
+      responses:
+        '200':
+          description: Ubicación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ubicacion'
+        '404':
+          description: Ubicación no encontrada
+        '500':
+          description: Error de servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /ubicaciones/{id}/estado:
+    patch:
+      summary: Actualizar el estado de una ubicación
+      tags:
+        - Ubicaciones
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: ID de la ubicación a actualizar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado:
+                  type: string
+                  example: "Inactivo"
+      responses:
+        '200':
+          description: Estado de la ubicación actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ubicacion'
+        '404':
+          description: Ubicación no encontrada
+        '500':
+          description: Error de servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 # ----------------------------------------------------------------
 # DEFINICIÓN DE ESQUEMAS REUTILIZABLES
 # ----------------------------------------------------------------
@@ -104,6 +249,41 @@ components:
         name:
           type: string
           example: "Item 1"
+          
+    Ubicacion:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        repositorio_id:
+          type: integer
+          example: 1
+        subserie_id:
+          type: integer
+          example: 1
+        carpeta_id:
+          type: string
+          example: "a79c6566-3238-4f33-9f2d-4b9a56c52528"
+        estado:
+          type: string
+          example: "Activo"
+          
+    UbicacionInput:
+      type: object
+      properties:
+        repositorio_id:
+          type: integer
+          example: 1
+        subserie_id:
+          type: integer
+          example: 1
+        carpeta_id:
+          type: string
+          example: "a79c6566-3238-4f33-9f2d-4b9a56c52528"
+        estado:
+          type: string
+          example: "Activo"
 
     # Esquema estándar de respuesta exitosa
     SuccessResponse:
